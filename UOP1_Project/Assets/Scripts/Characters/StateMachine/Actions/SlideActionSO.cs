@@ -3,25 +3,11 @@ using UOP1.StateMachine;
 using UOP1.StateMachine.ScriptableObjects;
 
 [CreateAssetMenu(fileName = "SlideAction", menuName = "State Machines/Actions/Slide")]
-public class SlideActionSO : StateActionSO
-{
-	[Tooltip("Sliding speed on the XZ plane.")]
-	[SerializeField] private float _slideSpeed = 6f;
-
-	protected override StateAction CreateAction() => new SlideAction(_slideSpeed);
-}
+public class SlideActionSO : StateActionSO<SlideAction> { }
 
 public class SlideAction : StateAction
 {
-	//Component references
 	private Protagonist _protagonistScript;
-
-	private float _slideSpeed;
-
-	public SlideAction(float slideSpeed)
-	{
-		_slideSpeed = slideSpeed;
-	}
 
 	public override void Awake(StateMachine stateMachine)
 	{
@@ -30,13 +16,21 @@ public class SlideAction : StateAction
 
 	public override void OnUpdate()
 	{
-		Vector3 hitNormal = _protagonistScript.lastHit.normal;
-		_protagonistScript.movementVector.x = (1f - hitNormal.y) * hitNormal.x * _slideSpeed;
-		_protagonistScript.movementVector.z = (1f - hitNormal.y) * hitNormal.z * _slideSpeed;
-	}
+		Vector3 velocity = _protagonistScript.movementVector;
+		float speed = -Physics.gravity.y * Protagonist.GRAVITY_MULTIPLIER * Time.deltaTime;
 
-	public override void OnStateExit()
-	{
-		_protagonistScript.movementVector = Vector3.zero;
+		Vector3 hitNormal = _protagonistScript.lastHit.normal;
+		var vector = new Vector3(hitNormal.x, -hitNormal.y, hitNormal.z);
+		Vector3.OrthoNormalize(ref hitNormal, ref vector);
+
+		// Cheap way to avoid overshooting the character, which causes it to move away from the slope
+		if (Mathf.Sign(vector.x) == Mathf.Sign(velocity.x))
+			vector.x *= 0.5f;
+		if (Mathf.Sign(vector.z) == Mathf.Sign(velocity.z))
+			vector.z *= 0.5f;
+
+		velocity += vector * speed;
+
+		_protagonistScript.movementVector = velocity;
 	}
 }
