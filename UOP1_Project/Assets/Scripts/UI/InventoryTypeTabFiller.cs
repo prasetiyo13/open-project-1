@@ -7,21 +7,34 @@ using UnityEngine.UI;
 public class InventoryTypeTabFiller : MonoBehaviour
 {
 
-	[SerializeField]
-	private LocalizeStringEvent tabName;
+	[SerializeField] private Image _tabImage = default;
 
-	[SerializeField]
-	private Button actionButton;
+	[SerializeField] private Button _actionButton = default;
 
-	public void fillTab(InventoryTabType tabType, bool isSelected, TabEventChannelSo changeTabEvent)
+	[SerializeField] private Color _selectedIconColor = default;
+	[SerializeField] private Color _deselectedIconColor = default;
+
+	[SerializeField] private TabEventChannelSO _changeTabEvent = default;
+
+
+
+	public void fillTab(InventoryTabType tabType, bool isSelected)
 	{
 
-		tabName.StringReference = tabType.TabName;
-		actionButton.interactable = !isSelected;
-		actionButton.onClick.RemoveAllListeners();
-		actionButton.onClick.AddListener(() => changeTabEvent.RaiseEvent(tabType));
+		_tabImage.sprite = tabType.TabIcon;
+		_actionButton.interactable = !isSelected;
 
+		if (isSelected)
+		{
+			_tabImage.color = _selectedIconColor;
+		}
+		else
+		{
+			_tabImage.color = _deselectedIconColor;
+		}
+
+		_actionButton.onClick.RemoveAllListeners();
+		_actionButton.onClick.AddListener(() => _changeTabEvent.RaiseEvent(tabType));
 	}
-
 
 }
